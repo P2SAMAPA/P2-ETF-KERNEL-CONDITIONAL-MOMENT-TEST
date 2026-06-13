@@ -1,12 +1,6 @@
 import numpy as np
 from sklearn.preprocessing import StandardScaler
-
-def rbf_kernel(X, Y, sigma=1.0):
-    """Gaussian kernel between two matrices."""
-    # For simplicity, we assume X and Y are 1D or 2D? We'll compute pairwise.
-    # For a single test, we need a scalar statistic. We'll compute:
-    # T = (1/n^2) sum_{i,j} K(X_i, X_j) * epsilon_i * epsilon_j, where epsilon = residual from linear regression.
-    pass
+from sklearn.linear_model import LinearRegression
 
 def kernel_conditional_moment_test(returns, macro_df, sigma=1.0, num_permutations=100):
     """
@@ -22,11 +16,16 @@ def kernel_conditional_moment_test(returns, macro_df, sigma=1.0, num_permutation
     min_len = min(len(returns), len(macro_df))
     returns = returns[:min_len]
     macro_df = macro_df.iloc[:min_len]
+    # Remove NaN rows
+    mask = ~(np.isnan(returns) | np.isnan(macro_df).any(axis=1))
+    returns = returns[mask]
+    macro_df = macro_df[mask]
+    if len(returns) < 10:
+        return 0.0
     # Standardise macro
     scaler = StandardScaler()
     macro_scaled = scaler.fit_transform(macro_df)
     # Linear regression of returns on macro
-    from sklearn.linear_model import LinearRegression
     lr = LinearRegression()
     lr.fit(macro_scaled, returns)
     resid = returns - lr.predict(macro_scaled)
@@ -42,6 +41,4 @@ def kernel_conditional_moment_test(returns, macro_df, sigma=1.0, num_permutation
     T_stat = T_stat / (n**2)
     # T_stat can be negative due to finite sample; take absolute value
     T_stat = abs(T_stat)
-    # Optional: permutation test for p‑value (not used as score)
-    # For score, we just use T_stat
     return T_stat
