@@ -2,7 +2,7 @@ name: Daily Kernel Conditional Moment Training
 
 on:
   schedule:
-    - cron: '30 01 * * *'
+    - cron: '30 00 * * *'
   workflow_dispatch:
 
 jobs:
